@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>تحدي المليون</title>
+  <style>
+    :root {
+      --bg-dark: #060b28;
+      --bg-card: #0d1642;
+      --gold: #f5b942;
+      --gold-light: #ffe082;
+      --blue-border: #3a56d4;
+      --orange: #e67e22;
+      --green: #27ae60;
+      --red: #c0392b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
+    body {
+      background: radial-gradient(circle at center, #111e5c 0%, var(--bg-dark) 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow-x: hidden;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: rgba(0, 0, 0, 0.35);
+      border-bottom: 1px solid rgba(245, 185, 66, 0.3);
+    }
+    .prize-badge {
+      background: linear-gradient(135deg, #b8860b, var(--gold));
+      color: #060b28;
+      font-weight: bold;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 1rem;
+      box-shadow: 0 0 12px rgba(245, 185, 66, 0.4);
+    }
+    .q-counter { font-size: 0.95rem; color: var(--gold-light); font-weight: bold; }
+    .lifelines {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px;
+    }
+    .lifeline-btn {
+      background: var(--bg-card);
+      border: 2px solid var(--gold);
+      color: var(--gold);
+      border-radius: 50px;
+      padding: 8px 14px;
+      font-size: 0.88rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .lifeline-btn:active { transform: scale(0.95); }
+    .lifeline-btn.used {
+      opacity: 0.3;
+      text-decoration: line-through;
+      border-color: #666;
+      color: #888;
+      pointer-events: none;
+    }
+    .game-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 16px;
+      max-width: 650px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .question-box {
+      background: linear-gradient(180deg, #132166 0%, #091036 100%);
+      border: 2px solid var(--gold);
+      border-radius: 18px;
+      padding: 24px 18px;
+      text-align: center;
+      font-size: 1.22rem;
+      font-weight: bold;
+      line-height: 1.6;
+      margin-bottom: 22px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+    }
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .option-btn {
+      background: linear-gradient(90deg, #0d1642 0%, #16256e 50%, #0d1642 100%);
+      border: 2px solid var(--blue-border);
+      color: #fff;
+      padding: 15px 18px;
+      border-radius: 14px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      text-align: right;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: 0.2s;
+    }
+    .option-btn span.letter { color: var(--gold); font-weight: bold; }
+    .option-btn.selected { background: var(--orange); border-color: #fff; }
+    .option-btn.correct { background: var(--green); border-color: #fff; box-shadow: 0 0 15px var(--green); }
+    .option-btn.wrong { background: var(--red); border-color: #fff; }
+    .option-btn.hidden { visibility: hidden; pointer-events: none; }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 11, 40, 0.95);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      text-align: center;
+      z-index: 100;
+    }
+    .modal.hide { display: none; }
+    .modal h1 { color: var(--gold); font-size: 2rem; margin-bottom: 12px; }
+    .modal p { font-size: 1.05rem; color: #ddd; margin-bottom: 24px; line-height: 1.7; }
+    .btn-primary {
+      background: linear-gradient(135deg, #d49b27, var(--gold));
+      color: #060b28;
+      border: none;
+      padding: 14px 36px;
+      font-size: 1.15rem;
+      font-weight: bold;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(245, 185, 66, 0.4);
+    }
+    .audience-chart {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-end;
+      height: 140px;
+      width: 260px;
+      margin: 15px auto 25px;
+      border-bottom: 2px solid var(--gold);
+      padding-bottom: 6px;
+    }
+    .bar-wrap { display: flex; flex-direction: column; align-items: center; width: 45px; }
+    .bar { width: 32px; background: var(--gold); border-radius: 6px 6px 0 0; transition: height 0.5s; }
+    .bar-label { margin-top: 6px; font-weight: bold; color: var(--gold-light); }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="q-counter" id="q-counter">السؤال 1 / 15</div>
+    <div class="prize-badge" id="current-prize">100 نقطة</div>
+  </div>
+
+  <div class="lifelines">
+    <button class="lifeline-btn" id="ll-5050" onclick="use5050()">50:50</button>
+    <button class="lifeline-btn" id="ll-audience" onclick="useAudience()">رأي الجمهور</button>
+    <button class="lifeline-btn" id="ll-skip" onclick="useSkip()">تغيير السؤال</button>
+  </div>
+
+  <div class="game-area">
+    <div class="question-box" id="question-text">جاري تحميل السؤال...</div>
+    <div class="options-grid" id="options-grid"></div>
+  </div>
+
+  <div class="modal" id="main-modal">
+    <h1 id="modal-title">تحدي المليون</h1>
+    <p id="modal-desc">اختبر معلوماتك الدينية والثقافية عبر 15 سؤالاً متجدداً في كل جولة.<br>أعلى رصيد حققته: <strong id="high-score" style="color:#f5b942">0</strong> نقطة</p>
+    <button class="btn-primary" onclick="startGame()">ابدأ التحدي</button>
+  </div>
+
+  <div class="modal hide" id="audience-modal">
+    <h1>تصويت الجمهور</h1>
+    <div class="audience-chart" id="audience-chart"></div>
+    <button class="btn-primary" onclick="closeAudience()">متابعة اللعب</button>
+  </div>
+
+<script>
+  const prizes = [
+    "100", "200", "300", "500", "1,000",
+    "2,000", "4,000", "8,000", "16,000", "32,000",
+    "64,000", "125,000", "250,000", "500,000", "1,000,000"
+  ];
+
+  const easyQuestions = [
+    { q: "ما هي السورة التي تُسمى قلب القرآن الكريم؟", opts: ["سورة الفاتحة", "سورة يس", "سورة الملك", "سورة الإخلاص"], ans: 1 },
+    { q: "كم عدد قارات العالم؟", opts: ["5 قارات", "6 قارات", "7 قارات", "8 قارات"], ans: 2 },
+    { q: "من هو أول مؤذن في الإسلام؟", opts: ["بلال بن رباح", "أبو بكر الصديق", "عمر بن الخطاب", "سلمان الفارسي"], ans: 0 },
+    { q: "ما هو الكوكب الملقب بالكوكب الأحمر؟", opts: ["الزهرة", "المشتري", "المريخ", "عطارد"], ans: 2 },
+    { q: "في أي شهر هجري فُرض صيام رمضان؟", opts: ["محرم", "رجب", "شعبان", "رمضان"], ans: 3 },
+    { q: "كم عدد الصلوات المفروضة في اليوم والليلة؟", opts: ["3 صلوات", "4 صلوات", "5 صلوات", "6 صلوات"], ans: 2 },
+    { q: "ما هي عاصمة المملكة العربية السعودية؟", opts: ["جدة", "الرياض", "مكة المكرمة", "الدمام"], ans: 1 },
+    { q: "كم عدد ألوان قوس قزح؟", opts: ["5 ألوان", "6 ألوان", "7 ألوان", "8 ألوان"], ans: 2 },
+    { q: "من هو خاتم الأنبياء والمرسلين؟", opts: ["عيسى عليه السلام", "موسى عليه السلام", "محمد ﷺ", "إبراهيم عليه السلام"], ans: 2 },
+    { q: "ما هو الحيوان الملقب بسفينة الصحراء؟", opts: ["الحصان", "الجمل", "الفيل", "الأسد"], ans: 1 }
+  ];
+
+  const mediumQuestions = [
+    { q: "ما هي أطول سورة في القرآن الكريم؟", opts: ["سورة آل عمران", "سورة النساء", "سورة البقرة", "سورة الأعراف"], ans: 2 },
+    { q: "ما هو الغاز الذي يشكل النسبة الأكبر من الغلاف الجوي للأرض؟", opts: ["الأكسجين", "النيتروجين", "ثاني أكسيد الكربون", "الهيدروجين"], ans: 1 },
+    { q: "من هو الصحابي الذي لُقب بسيف الله المسلول؟", opts: ["خالد بن الوليد", "عمرو بن العاص", "سعد بن أبي وقاص", "أبو عبيدة بن الجراح"], ans: 0 },
+    { q: "ما هي عاصمة دولة اليابان؟", opts: ["بكين", "سيول", "طوكيو", "بانكوك"], ans: 2 },
+    { q: "كم عدد سنوات خلافة أبي بكر الصديق رضي الله عنه؟", opts: ["سنتان وثلاثة أشهر", "أربع سنوات", "عشر سنوات", "سنة واحدة"], ans: 0 },
+    { q: "ما هي السورة الوحيدة في القرآن التي لا تبدأ بالبسملة؟", opts: ["سورة الأنفال", "سورة التوبة", "سورة النمل", "سورة الحج"], ans: 1 },
+    { q: "ما هو أطول نهر في العالم؟", opts: ["نهر الأمازون", "نهر النيل", "نهر المسيسيبي", "نهر الفرات"], ans: 1 },
+    { q: "في أي سنة هجرية وقعت غزوة بدر الكبرى؟", opts: ["السنة الأولى", "السنة الثانية", "السنة الثالثة", "السنة الخامسة"], ans: 1 },
+    { q: "ما هو أصلب عنصر طبيعي موجود على وجه الأرض؟", opts: ["الذهب", "الألماس", "الحديد", "التيتانيوم"], ans: 1 },
+    { q: "من هو النبي الذي أُرسل إلى قوم ثمود؟", opts: ["هود عليه السلام", "صالح عليه السلام", "شعيب عليه السلام", "لوط عليه السلام"], ans: 1 }
+  ];
+
+  const hardQuestions = [
+    { q: "ما هي السورة التي ذُكرت فيها البسملة مرتين؟", opts: ["سورة البقرة", "سورة النمل", "سورة الكهف", "سورة الإسراء"], ans: 1 },
+    { q: "من هو العالم المسلم الذي أسس علم الجبر؟", opts: ["ابن سينا", "الخوارزمي", "ابن الهيثم", "جابر بن حيان"], ans: 1 },
+    { q: "ما هو الاسم القديم لمدينة إسطنبول؟", opts: ["أنطاكية", "القسطنطينية", "قرطبة", "سمـرقند"], ans: 1 },
+    { q: "كم عدد السجدات في القرآن الكريم؟", opts: ["12 سجدة", "14 سجدة", "15 سجدة", "16 سجدة"], ans: 2 },
+    { q: "ما هو أقرب نجم إلى كوكب الأرض بعد الشمس؟", opts: ["الشعرى اليمانية", "بروكسيما سنتوري", "سهيل", "نجم القطب"], ans: 1 },
+    { q: "من هو الصحابي الذي اهتز لموته عرش الرحمن؟", opts: ["حمزة بن عبد المطلب", "سعد بن معاذ", "مصعب بن عمير", "جعفر بن أبي طالب"], ans: 1 },
+    { q: "ما هي الدولة التي تمتلك أكبر عدد من الجزر في العالم؟", opts: ["إندونيسيا", "الفلبين", "السويد", "اليابان"], ans: 2 },
+    { q: "كم عدد آيات سورة البقرة؟", opts: ["280 آية", "286 آية", "290 آية", "276 آية"], ans: 1 },
+    { q: "ما هو المعدن الأعلى توصيلاً للكهرباء بين جميع المعادن؟", opts: ["الذهب", "النحاس", "الفضة", "الألمنيوم"], ans: 2 },
+    { q: "في أي غزوة أُصيب النبي ﷺ في وجهه وكُسرت رباعيته؟", opts: ["غزوة بدر", "غزوة أحد", "غزوة الخندق", "غزوة حنين"], ans: 1 }
+  ];
+
+  let currentIdx = 0;
+  let activeQuestions = [];
+  let reserveQuestions = { easy: {}, medium: {}, hard: {} };
+  let isLocked = false;
+  const letters = ["أ", "ب", "ج", "د"];
+
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  function playTone(freq, type, duration) {
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch(e) {}
+  }
+
+  function updateHighScoreDisplay() {
+    const saved = localStorage.getItem("million_highscore") || "0";
+    document.getElementById("high-score").innerText = saved;
+  }
+  updateHighScoreDisplay();
+
+  function pickUniqueQuestions(pool, storageKey, countNeeded) {
+    let usedIndices = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    let availableIndices = pool.map((_, idx) => idx).filter(idx => !usedIndices.includes(idx));
+
+    if (availableIndices.length < countNeeded + 1) {
+      usedIndices = [];
+      availableIndices = pool.map((_, idx) => idx);
+    }
+
+    for (let i = availableIndices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [availableIndices[i], availableIndices[j]] = [availableIndices[j], availableIndices[i]];
+    }
+
+    const chosenIndices = availableIndices.slice(0, countNeeded);
+    const backupIndex = availableIndices[countNeeded];
+
+    const updatedUsed = [...usedIndices, ...chosenIndices];
+    localStorage.setItem(storageKey, JSON.stringify(updatedUsed));
+
+    return {
+      selected: chosenIndices.map(i => pool[i]),
+      backup: pool[backupIndex]
+    };
+  }
+
+  function startGame() {
+    currentIdx = 0;
+    isLocked = false;
+
+    const easyPick = pickUniqueQuestions(easyQuestions, "used_easy_q", 5);
+    const medPick = pickUniqueQuestions(mediumQuestions, "used_med_q", 5);
+    const hardPick = pickUniqueQuestions(hardQuestions, "used_hard_q", 5);
+
+    activeQuestions = [
+      ...easyPick.selected,
+      ...medPick.selected,
+      ...hardPick.selected
+    ];
+
+    reserveQuestions = {
+      easy: easyPick.backup,
+      medium: medPick.backup,
+      hard: hardPick.backup
+    };
+
+    document.getElementById("ll-5050").classList.remove("used");
+    document.getElementById("ll-audience").classList.remove("used");
+    document.getElementById("ll-skip").classList.remove("used");
+    document.getElementById("main-modal").classList.add("hide");
+    loadQuestion();
+  }
+
+  function loadQuestion() {
+    isLocked = false;
+    const qData = activeQuestions[currentIdx];
+    document.getElementById("q-counter").innerText = `السؤال ${currentIdx + 1} / 15`;
+    document.getElementById("current-prize").innerText = `${prizes[currentIdx]} نقطة`;
+    document.getElementById("question-text").innerText = qData.q;
+
+    const grid = document.getElementById("options-grid");
+    grid.innerHTML = "";
+    qData.opts.forEach((opt, i) => {
+      const btn = document.createElement("button");
+      btn.className = "option-btn";
+      btn.id = `opt-${i}`;
+      btn.innerHTML = `<span class="letter">${letters[i]}:</span> <span>${opt}</span>`;
+      btn.onclick = () => selectAnswer(i);
+      grid.appendChild(btn);
+    });
+  }
+
+  function selectAnswer(selectedIdx) {
+    if (isLocked) return;
+    isLocked = true;
+    const qData = activeQuestions[currentIdx];
+    const selectedBtn = document.getElementById(`opt-${selectedIdx}`);
+    selectedBtn.classList.add("selected");
+    playTone(440, "sine", 0.2);
+
+    setTimeout(() => {
+      if (selectedIdx === qData.ans) {
+        selectedBtn.classList.remove("selected");
+        selectedBtn.classList.add("correct");
+        playTone(660, "triangle", 0.4);
+        saveHighScore(prizes[currentIdx]);
+
+        setTimeout(() => {
+          currentIdx++;
+          if (currentIdx >= 15) {
+            endGame(true);
+          } else {
+            loadQuestion();
+          }
+        }, 1200);
+      } else {
+        selectedBtn.classList.remove("selected");
+        selectedBtn.classList.add("wrong");
+        document.getElementById(`opt-${qData.ans}`).classList.add("correct");
+        playTone(180, "sawtooth", 0.5);
+
+        setTimeout(() => endGame(false), 1600);
+      }
+    }, 1000);
+  }
+
+  function saveHighScore(prizeStr) {
+    const numVal = parseInt(prizeStr.replace(/,/g, ""));
+    const oldVal = parseInt((localStorage.getItem("million_highscore") || "0").replace(/,/g, ""));
+    if (numVal > oldVal) {
+      localStorage.setItem("million_highscore", prizeStr);
+    }
+  }
+
+  function endGame(wonAll) {
+    const modal = document.getElementById("main-modal");
+    const title = document.getElementById("modal-title");
+    const desc = document.getElementById("modal-desc");
+
+    if (wonAll) {
+      title.innerText = "مبروك! ربحت المليون!";
+      desc.innerHTML = "أجبت على جميع الأسئلة الـ 15 بنجاح باهر!<br>رصيدك النهائي: <strong style='color:#f5b942'>1,000,000</strong> نقطة";
+    } else {
+      let safePrize = "0";
+      if (currentIdx >= 10) safePrize = "32,000";
+      else if (currentIdx >= 5) safePrize = "1,000";
+      title.innerText = "انتهت الجولة!";
+      desc.innerHTML = `إجابة خاطئة! رصيدك المضمون هو: <strong style='color:#f5b942'>${safePrize}</strong> نقطة.<br>أعلى رصيد حققته: <strong style='color:#f5b942'>${localStorage.getItem("million_highscore") || 0}</strong> نقطة`;
+    }
+    modal.classList.remove("hide");
+  }
+
+  function use5050() {
+    if (isLocked) return;
+    document.getElementById("ll-5050").classList.add("used");
+    const ans = activeQuestions[currentIdx].ans;
+    let wrongIndices = [0, 1, 2, 3].filter(i => i !== ans);
+    wrongIndices.sort(() => Math.random() - 0.5);
+    document.getElementById(`opt-${wrongIndices[0]}`).classList.add("hidden");
+    document.getElementById(`opt-${wrongIndices[1]}`).classList.add("hidden");
+    playTone(520, "sine", 0.2);
+  }
+
+  function useAudience() {
+    if (isLocked) return;
+    document.getElementById("ll-audience").classList.add("used");
+    const ans = activeQuestions[currentIdx].ans;
+    let percents = [0, 0, 0, 0];
+    let correctPct = Math.floor(Math.random() * 25) + 55;
+    percents[ans] = correctPct;
+    let rem = 100 - correctPct;
+    [0, 1, 2, 3].filter(i => i !== ans).forEach((idx, k) => {
+      if (k === 2) percents[idx] = rem;
+      else {
+        let p = Math.floor(Math.random() * rem);
+        percents[idx] = p;
+        rem -= p;
+      }
+    });
+
+    const chart = document.getElementById("audience-chart");
+    chart.innerHTML = "";
+    percents.forEach((pct, i) => {
+      chart.innerHTML += `
+        <div class="bar-wrap">
+          <div style="font-size:0.85rem;margin-bottom:4px;">${pct}%</div>
+          <div class="bar" style="height:${pct}px;"></div>
+          <div class="bar-label">${letters[i]}</div>
+        </div>
+      `;
+    });
+    document.getElementById("audience-modal").classList.remove("hide");
+  }
+
+  function closeAudience() {
+    document.getElementById("audience-modal").classList.add("hide");
+  }
+
+  function useSkip() {
+    if (isLocked) return;
+    document.getElementById("ll-skip").classList.add("used");
+    if (currentIdx < 5) activeQuestions[currentIdx] = reserveQuestions.easy;
+    else if (currentIdx < 10) activeQuestions[currentIdx] = reserveQuestions.medium;
+    else activeQuestions[currentIdx] = reserveQuestions.hard;
+    loadQuestion();
+    playTone(580, "sine", 0.2);
+  }
+</script>
+</body>
+</html>
