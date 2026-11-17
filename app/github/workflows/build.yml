@@ -1,4 +1,4 @@
-name: Build Android App Bundle
+name: Build Android APK
 
 on:
   push:
@@ -29,11 +29,11 @@ jobs:
         with:
           gradle-version: '8.4'
 
-      - name: Build Release AAB
-        run: ./gradlew bundleRelease
+      - name: Build Release APK
+        run: gradle assembleRelease
 
-      - name: Upload AAB Artifact
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MillionChallenge-release-aab
-          path: app/build/outputs/bundle/release/app-release.aab
+          name: MillionChallenge-release-apk
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
