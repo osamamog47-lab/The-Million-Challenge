@@ -1,4 +1,4 @@
-name: Build Android App Bundle
+name: Build and Save APK
 
 on:
   push:
@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
@@ -30,10 +32,14 @@ jobs:
           gradle-version: '8.4'
 
       - name: Build Release APK
-        run: gradle bundleRelease
+        run: gradle assembleRelease
 
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: MillionChallenge-release-apk
-          path: app/build/outputs/apk/release/app-release-unsigned.apk
+      - name: Commit and Push APK to Repository
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          mkdir -p final-apk
+          cp app/build/outputs/apk/release/app-release-unsigned.apk final-apk/MillionChallenge.apk
+          git add final-apk/MillionChallenge.apk
+          git commit -m "Auto-upload built APK" || echo "No changes to commit"
+          git push
