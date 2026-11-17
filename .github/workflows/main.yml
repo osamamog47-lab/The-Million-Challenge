@@ -29,11 +29,11 @@ jobs:
         with:
           gradle-version: '8.4'
 
-      - name: Build Release AAB
+      - name: Build Release APK
         run: gradle bundleRelease
 
-      - name: Upload AAB Artifact
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MillionChallenge-release-aab
-          path: app/build/outputs/bundle/release/app-release.aab
+          name: MillionChallenge-release-apk
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
