@@ -1,4 +1,4 @@
-name: Build and Release APK
+name: Build and Save APK
 
 on:
   push:
@@ -34,10 +34,12 @@ jobs:
       - name: Build Release APK
         run: gradle assembleRelease
 
-      - name: Create Release and Upload APK
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: "Million Challenge v1.0.${{ github.run_number }}"
-          files: app/build/outputs/apk/release/app-release-unsigned.apk
-          body: "نسخة جديدة جاهزة للتثبيت المباشر على الهاتف."
+      - name: Commit and Push APK to Repository
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          mkdir -p final-apk
+          cp app/build/outputs/apk/release/app-release-unsigned.apk final-apk/MillionChallenge.apk
+          git add final-apk/MillionChallenge.apk
+          git commit -m "Auto-upload built APK" || echo "No changes to commit"
+          git push
